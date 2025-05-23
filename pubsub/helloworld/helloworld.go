@@ -11,7 +11,7 @@ type HelloWorldPublisher struct {
 	c kitpubsub.PubSubClient
 }
 
-func NewHelloWorldPublisher(c kitpubsub.PubSubClient) *HelloWorldPublisher {
+func NewHelloWorldPublisher(c kitpubsub.PubSubClient) kitpubsub.Publisher {
 	return &HelloWorldPublisher{
 		c: c,
 	}
@@ -27,7 +27,7 @@ type HelloWorldSubscriber struct {
 	handler      kitpubsub.SubscriptionHandler
 }
 
-func NewHelloWorldSubscriber(c kitpubsub.PubSubClient, subscription kitpubsub.Subscription, handler kitpubsub.SubscriptionHandler) *HelloWorldSubscriber {
+func NewHelloWorldSubscriber(c kitpubsub.PubSubClient, subscription kitpubsub.Subscription, handler kitpubsub.SubscriptionHandler) kitpubsub.Subscriber {
 	return &HelloWorldSubscriber{
 		c:            c,
 		subscription: subscription,
@@ -35,19 +35,12 @@ func NewHelloWorldSubscriber(c kitpubsub.PubSubClient, subscription kitpubsub.Su
 	}
 }
 
-func (hs *HelloWorldSubscriber) GetSubscription() kitpubsub.Subscription {
-	return hs.subscription
-}
-
-func (hs *HelloWorldSubscriber) GetSubscriptionHandler() kitpubsub.SubscriptionHandler {
-	return hs.handler
-}
-
 type HelloWorldSubscriptionHandler struct{}
 
-func (h *HelloWorldSubscriptionHandler) Handle(ctx context.Context, msg *pubsub.Message) {
+func (h *HelloWorldSubscriptionHandler) Handle(ctx context.Context, msg *pubsub.Message) error {
+	return nil
 }
 
-func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context, s kitpubsub.Subscription, h kitpubsub.SubscriptionHandler) error {
+func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context) error {
 	return nil
 }

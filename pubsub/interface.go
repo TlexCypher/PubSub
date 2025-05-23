@@ -16,13 +16,11 @@ type Publisher interface {
 }
 
 type Subscriber interface {
-	Subscribe(ctx context.Context, s Subscription, h SubscriptionHandler) error
-	GetSubscription() Subscription
-	GetSubscriptionHandler() SubscriptionHandler
+	Subscribe(ctx context.Context) error
 }
 
 type SubscriptionHandler interface {
-	Handle(ctx context.Context, msg *pubsub.Message)
+	Handle(ctx context.Context, msg *pubsub.Message) error
 }
 
 type PubSubClient interface {

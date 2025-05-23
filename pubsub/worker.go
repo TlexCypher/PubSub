@@ -2,6 +2,8 @@ package pubsub
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -29,18 +31,23 @@ func (psw *PubSubWorker) RegisterSubscribers(subscribers ...Subscriber) {
 }
 
 func (psw *PubSubWorker) Run() error {
-	eg := errgroup.Group{}
-	eg.Go(func() error {
-		for _, sub := range psw.subscribers {
-			if err := sub.Subscribe(
-				psw.ctx,
-				sub.GetSubscription(),
-				sub.GetSubscriptionHandler(),
-			); err != nil {
-				return err
+	eg, ctx := errgroup.WithContext(psw.ctx)
+	for _, _sub := range psw.subscribers {
+		sub := _sub
+		eg.Go(func() error {
+			log.Println("PubSubWorker: Starting subscriber...")
+			err := sub.Subscribe(ctx)
+			if err != nil {
+				log.Printf("PubSubWorker: Subscriber exited with error: %v\n", err)
+			} else {
+				log.Println("PubSubWorker: Subscriber exited gracefully.")
 			}
-		}
-		return nil
-	})
+			return err
+		})
+	}
+	if err := eg.Wait(); err != nil {
+		return fmt.Errorf("pubsub worker run failed: %w", err)
+	}
+	log.Println("PubSubWorker: All subscribers finished successfully.")
 	return nil
 }
