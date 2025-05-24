@@ -22,7 +22,6 @@ func NewHelloWorldPublisher(c kitpubsub.PubSubClient) kitpubsub.Publisher {
 
 func (hp *HelloWorldPublisher) Publish(ctx context.Context, topic kitpubsub.Topic, data []byte) (string, error) {
 	pubsubClient := hp.c.GetClient()
-	defer pubsubClient.Close()
 	t := pubsubClient.Topic(string(topic))
 	result := t.Publish(ctx, &pubsub.Message{
 		Data: data,
@@ -52,7 +51,6 @@ func (h *HelloWorldSubscriptionHandler) Handle(ctx context.Context, msg *pubsub.
 
 func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context, subscription kitpubsub.Subscription) error {
 	pubsubClient := hs.c.GetClient()
-	defer pubsubClient.Close()
 	sub := pubsubClient.Subscription(string(subscription))
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
