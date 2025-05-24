@@ -16,7 +16,7 @@ type Publisher interface {
 }
 
 type Subscriber interface {
-	Subscribe(ctx context.Context) error
+	Subscribe(ctx context.Context, subscription Subscription) error
 }
 
 type SubscriptionHandler interface {
@@ -24,5 +24,6 @@ type SubscriptionHandler interface {
 }
 
 type PubSubClient interface {
+	GetClient() *pubsub.Client
 	Close() error
 }

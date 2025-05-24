@@ -12,6 +12,10 @@ func NewPubSubClientImpl(c *pubsub.Client) *PubSubClientImpl {
 	}
 }
 
+func (c *PubSubClientImpl) GetClient() *pubsub.Client {
+	return c.c
+}
+
 func (c *PubSubClientImpl) Close() error {
 	return c.c.Close()
 }

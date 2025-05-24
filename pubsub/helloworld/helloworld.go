@@ -2,6 +2,9 @@ package helloworld
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	kitpubsub "github.com/TlexCypher/PubSub/pubsub"
@@ -18,7 +21,13 @@ func NewHelloWorldPublisher(c kitpubsub.PubSubClient) kitpubsub.Publisher {
 }
 
 func (hp *HelloWorldPublisher) Publish(ctx context.Context, topic kitpubsub.Topic, data []byte) (string, error) {
-	return "", nil
+	pubsubClient := hp.c.GetClient()
+	defer pubsubClient.Close()
+	t := pubsubClient.Topic(string(topic))
+	result := t.Publish(ctx, &pubsub.Message{
+		Data: data,
+	})
+	return result.Get(ctx)
 }
 
 type HelloWorldSubscriber struct {
@@ -41,6 +50,19 @@ func (h *HelloWorldSubscriptionHandler) Handle(ctx context.Context, msg *pubsub.
 	return nil
 }
 
-func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context) error {
+func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context, subscription kitpubsub.Subscription) error {
+	pubsubClient := hs.c.GetClient()
+	defer pubsubClient.Close()
+	sub := pubsubClient.Subscription(string(subscription))
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	err := sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
+		log.Printf("Got message: %q\n", string(msg.Data))
+		msg.Ack()
+	})
+	if err != nil {
+		return fmt.Errorf("sub.Receive: %w", err)
+	}
 	return nil
 }

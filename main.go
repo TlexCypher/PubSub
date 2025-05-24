@@ -18,14 +18,16 @@ import (
 var (
 	port                   = os.Getenv("PORT")
 	projectID              = os.Getenv("PROJECT_ID")
+	topicID                = os.Getenv("TOPIC_ID")
 	helloworldSubscription = os.Getenv("HELLOWORLD_SUBSCRIPTION")
+	msg                    = "HELLO WORLD FROM PUB/SUB"
 )
 
 func main() {
 	// pub/sub
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-
 	sdkClient, err := pubsub.NewClient(ctx, projectID)
+	pubsubClient := kitpubsub.NewPubSubClientImpl(sdkClient)
 	if err != nil {
 		log.Fatalf("failed to create pubsub client: %v", err)
 	}
@@ -33,11 +35,13 @@ func main() {
 
 	worker := kitpubsub.NewPubSubWorker(ctx)
 	worker.RegisterSubscribers(
-		helloworld.NewHelloWorldSubscriber(
-			sdkClient,
-			kitpubsub.Subscription(helloworldSubscription),
-			&helloworld.HelloWorldSubscriptionHandler{},
-		),
+		map[kitpubsub.Subscriber]kitpubsub.Subscription{
+			helloworld.NewHelloWorldSubscriber(
+				pubsubClient,
+				kitpubsub.Subscription(helloworldSubscription),
+				&helloworld.HelloWorldSubscriptionHandler{},
+			): kitpubsub.Subscription(helloworldSubscription),
+		},
 	)
 
 	workerErr, mainServerErr := make(chan error, 1), make(chan error, 1)
@@ -59,8 +63,13 @@ func main() {
 		defer close(mainServerErr)
 		log.Println("Starting Main HTTP Server...")
 		if err := srv.Run(ctx, map[string]func(http.ResponseWriter, *http.Request){
-			"main": func(w http.ResponseWriter, req *http.Request) {
-				fmt.Fprint(w, "hello from main server")
+			"/main": func(w http.ResponseWriter, req *http.Request) {
+				publisher := helloworld.NewHelloWorldPublisher(pubsubClient)
+				serverID, err := publisher.Publish(ctx, kitpubsub.Topic(topicID), []byte(msg))
+				if err != nil {
+					log.Fatalf("failed to publish message: %v", err)
+				}
+				log.Printf("message was successfully published. serverID:%v\n", serverID)
 			},
 		}); err != nil {
 			mainServerErr <- fmt.Errorf("HTTP server Run failed: %w", err)
