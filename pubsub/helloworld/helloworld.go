@@ -31,21 +31,13 @@ func (hp *HelloWorldPublisher) Publish(ctx context.Context, topic kitpubsub.Topi
 type HelloWorldSubscriber struct {
 	c            kitpubsub.PubSubClient
 	subscription kitpubsub.Subscription
-	handler      kitpubsub.SubscriptionHandler
 }
 
-func NewHelloWorldSubscriber(c kitpubsub.PubSubClient, subscription kitpubsub.Subscription, handler kitpubsub.SubscriptionHandler) kitpubsub.Subscriber {
+func NewHelloWorldSubscriber(c kitpubsub.PubSubClient, subscription kitpubsub.Subscription) kitpubsub.Subscriber {
 	return &HelloWorldSubscriber{
 		c:            c,
 		subscription: subscription,
-		handler:      handler,
 	}
-}
-
-type HelloWorldSubscriptionHandler struct{}
-
-func (h *HelloWorldSubscriptionHandler) Handle(ctx context.Context, msg *pubsub.Message) error {
-	return nil
 }
 
 func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context, subscription kitpubsub.Subscription) error {

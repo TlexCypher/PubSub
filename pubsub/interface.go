@@ -19,10 +19,6 @@ type Subscriber interface {
 	Subscribe(ctx context.Context, subscription Subscription) error
 }
 
-type SubscriptionHandler interface {
-	Handle(ctx context.Context, msg *pubsub.Message) error
-}
-
 type PubSubClient interface {
 	GetClient() *pubsub.Client
 	Close() error

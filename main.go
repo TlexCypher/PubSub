@@ -39,7 +39,6 @@ func main() {
 			helloworld.NewHelloWorldSubscriber(
 				pubsubClient,
 				kitpubsub.Subscription(helloworldSubscription),
-				&helloworld.HelloWorldSubscriptionHandler{},
 			): kitpubsub.Subscription(helloworldSubscription),
 		},
 	)
