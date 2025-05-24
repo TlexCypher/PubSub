@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"cloud.google.com/go/pubsub"
 	kitpubsub "github.com/TlexCypher/PubSub/pubsub"
@@ -52,8 +51,6 @@ func (h *HelloWorldSubscriptionHandler) Handle(ctx context.Context, msg *pubsub.
 func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context, subscription kitpubsub.Subscription) error {
 	pubsubClient := hs.c.GetClient()
 	sub := pubsubClient.Subscription(string(subscription))
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
 
 	err := sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		log.Printf("Got message: %q\n", string(msg.Data))

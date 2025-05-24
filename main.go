@@ -54,7 +54,7 @@ func main() {
 	// main server
 	srv := NewApplicationServer(
 		&http.Server{
-			Addr:    fmt.Sprintf(":%v\n", port),
+			Addr:    fmt.Sprintf(":%v", port),
 			Handler: nil,
 		},
 	)
