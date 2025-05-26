@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http/httptest"
 	"testing"
@@ -67,31 +68,31 @@ func TestApplicationServer(t *testing.T) {
 	}
 }
 
-// func TestPubSubWorker(t *testing.T) {
-// 	t.Parallel()
-// 	tests := []struct {
-// 		description string
-// 		wantErr     error
-// 	}{
-// 		{
-// 			description: "Success case",
-// 			wantErr:     nil,
-// 		},
-// 	}
-// 	ctx := context.Background()
-// 	for _, tt := range tests {
-// 		tt := tt
-// 		t.Run(tt.description, func(t *testing.T) {
-// 			t.Parallel()
-// 			mockedPubsubWorker := kitpubsub.NewPubSubWorker(ctx)
-// 			mockedPubsubWorker.RegisterSubscribers(
-// 				map[kitpubsub.Subscriber]kitpubsub.Subscription{
-// 					mock.NewMockSubscriber(): mock.NewMockSubscription(),
-// 				},
-// 			)
-// 			if err := mockedPubsubWorker.Run(); !errors.Is(err, tt.wantErr) {
-// 				t.Errorf("failed to run pubsub workers: (-expected, +got)\n-%v\n+%v\n", tt.wantErr, err)
-// 			}
-// 		})
-// 	}
-// }
+func TestPubSubWorker(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		description string
+		wantErr     error
+	}{
+		{
+			description: "Success case",
+			wantErr:     nil,
+		},
+	}
+	ctx := context.Background()
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+			mockedPubsubWorker := kitpubsub.NewPubSubWorker(ctx)
+			mockedPubsubWorker.RegisterSubscribers(
+				map[kitpubsub.Subscriber]kitpubsub.Subscription{
+					mock.NewMockSubscriber(): mock.NewMockSubscription(),
+				},
+			)
+			if err := mockedPubsubWorker.Run(); !errors.Is(err, tt.wantErr) {
+				t.Errorf("failed to run pubsub workers: (-expected, +got)\n-%v\n+%v\n", tt.wantErr, err)
+			}
+		})
+	}
+}
