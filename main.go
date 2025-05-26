@@ -49,11 +49,10 @@ func main() {
 		map[kitpubsub.Subscriber]kitpubsub.Subscription{
 			helloworld.NewHelloWorldSubscriber(
 				pubsubClient,
-				kitpubsub.Subscription(helloworldSubscription),
-			): kitpubsub.Subscription(helloworldSubscription),
+				kitpubsub.SubscriptionID(helloworldSubscription),
+			): pubsubClient.Subscription(kitpubsub.SubscriptionID(helloworldSubscription)),
 		},
 	)
-
 	workerErr, mainServerErr := make(chan error, 1), make(chan error, 1)
 	go func() {
 		defer close(workerErr)
