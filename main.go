@@ -26,7 +26,8 @@ func makePubSubHandler(publisher kitpubsub.Publisher) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		serverID, err := publisher.Publish(req.Context(), kitpubsub.Topic(topicID), []byte(msg))
 		if err != nil {
-			log.Fatalf("failed to publish message: %v", err)
+			log.Printf("failed to publish message: %v", err)
+			return
 		}
 		log.Printf("message was successfully published. serverID:%v\n", serverID)
 		w.WriteHeader(http.StatusOK)

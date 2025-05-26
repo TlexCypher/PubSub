@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/pubsub"
 	kitpubsub "github.com/TlexCypher/PubSub/pubsub"
 )
 
@@ -13,6 +14,7 @@ var (
 	MockPublishFunc = (func(context.Context, kitpubsub.Topic, []byte) (string, error))(nil)
 )
 
+/* publisher */
 type MockPublisher struct {
 	publishFunc func(context.Context, kitpubsub.Topic, []byte) (string, error)
 	serverID    string
@@ -57,4 +59,29 @@ func (mp *MockPublisher) Publish(ctx context.Context, topic kitpubsub.Topic, dat
 		return mp.publishFunc(ctx, topic, data)
 	}
 	return mp.serverID, mp.serverErr
+}
+
+/* subscriber */
+type MockSubscriber struct {
+}
+
+func NewMockSubscriber() kitpubsub.Subscriber {
+	return &MockSubscriber{}
+}
+
+func (ms *MockSubscriber) Subscribe(ctx context.Context, subscription kitpubsub.Subscription) error {
+	//TODO: implement this, mock content, you bet.
+	return nil
+}
+
+/* subscription*/
+type MockSubscription struct{}
+
+func NewMockSubscription() kitpubsub.Subscription {
+	return &MockSubscription{}
+}
+
+func (ms *MockSubscription) Receive(ctx context.Context, handler func(context.Context, *pubsub.Message)) error {
+	//TODO: implement this, mock content, you bet.
+	return nil
 }
