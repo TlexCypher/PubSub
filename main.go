@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	port                   = os.Getenv("PORT")
 	projectID              = os.Getenv("PROJECT_ID")
 	topicID                = os.Getenv("TOPIC_ID")
 	helloworldSubscription = os.Getenv("HELLOWORLD_SUBSCRIPTION")
@@ -51,13 +50,7 @@ func main() {
 	}()
 
 	// main server
-	srv := NewApplicationServer(
-		&http.Server{
-			Addr:    fmt.Sprintf(":%v", port),
-			Handler: nil,
-		},
-	)
-
+	srv := NewApplicationServer()
 	go func() {
 		defer close(mainServerErr)
 		log.Println("Starting Main HTTP Server...")
