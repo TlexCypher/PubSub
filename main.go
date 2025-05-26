@@ -22,6 +22,18 @@ var (
 	msg                    = "HELLO WORLD FROM PUB/SUB"
 )
 
+func makePubSubHandler(publisher kitpubsub.Publisher) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		serverID, err := publisher.Publish(req.Context(), kitpubsub.Topic(topicID), []byte(msg))
+		if err != nil {
+			log.Fatalf("failed to publish message: %v", err)
+		}
+		log.Printf("message was successfully published. serverID:%v\n", serverID)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "%s", serverID)
+	}
+}
+
 func main() {
 	// pub/sub
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -55,14 +67,7 @@ func main() {
 		defer close(mainServerErr)
 		log.Println("Starting Main HTTP Server...")
 		if err := srv.Run(ctx, map[string]func(http.ResponseWriter, *http.Request){
-			"/main": func(w http.ResponseWriter, req *http.Request) {
-				publisher := helloworld.NewHelloWorldPublisher(pubsubClient)
-				serverID, err := publisher.Publish(ctx, kitpubsub.Topic(topicID), []byte(msg))
-				if err != nil {
-					log.Fatalf("failed to publish message: %v", err)
-				}
-				log.Printf("message was successfully published. serverID:%v\n", serverID)
-			},
+			"/main": makePubSubHandler(helloworld.NewHelloWorldPublisher(pubsubClient)),
 		}); err != nil {
 			mainServerErr <- fmt.Errorf("HTTP server Run failed: %w", err)
 		}
