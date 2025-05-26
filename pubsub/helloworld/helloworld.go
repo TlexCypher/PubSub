@@ -29,29 +29,22 @@ func (hp *HelloWorldPublisher) Publish(ctx context.Context, topic kitpubsub.Topi
 }
 
 type HelloWorldSubscriber struct {
-	c            kitpubsub.PubSubClient
-	subscription kitpubsub.Subscription
-	handler      kitpubsub.SubscriptionHandler
+	c              kitpubsub.PubSubClient
+	subscriptionID kitpubsub.SubscriptionID
 }
 
-func NewHelloWorldSubscriber(c kitpubsub.PubSubClient, subscription kitpubsub.Subscription, handler kitpubsub.SubscriptionHandler) kitpubsub.Subscriber {
+func NewHelloWorldSubscriber(c kitpubsub.PubSubClient, subscriptionID kitpubsub.SubscriptionID) kitpubsub.Subscriber {
 	return &HelloWorldSubscriber{
-		c:            c,
-		subscription: subscription,
-		handler:      handler,
+		c:              c,
+		subscriptionID: subscriptionID,
 	}
 }
 
-type HelloWorldSubscriptionHandler struct{}
-
-func (h *HelloWorldSubscriptionHandler) Handle(ctx context.Context, msg *pubsub.Message) error {
-	return nil
+func (hs *HelloWorldSubscriber) GetClient() kitpubsub.PubSubClient {
+	return hs.c
 }
 
-func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context, subscription kitpubsub.Subscription) error {
-	pubsubClient := hs.c.GetClient()
-	sub := pubsubClient.Subscription(string(subscription))
-
+func (hs *HelloWorldSubscriber) Subscribe(ctx context.Context, sub kitpubsub.Subscription) error {
 	err := sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		log.Printf("Got message: %q\n", string(msg.Data))
 		msg.Ack()

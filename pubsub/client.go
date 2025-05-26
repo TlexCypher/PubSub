@@ -16,6 +16,10 @@ func (c *PubSubClientImpl) GetClient() *pubsub.Client {
 	return c.c
 }
 
+func (c *PubSubClientImpl) Subscription(subscriptionID SubscriptionID) Subscription {
+	return c.c.Subscription(string(subscriptionID))
+}
+
 func (c *PubSubClientImpl) Close() error {
 	return c.c.Close()
 }

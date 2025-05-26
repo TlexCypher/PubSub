@@ -5,23 +5,24 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"golang.org/x/sync/errgroup"
 )
 
+var (
+	port = os.Getenv("PORT")
+)
+
 type Server interface {
-	Run()
+	Run(context.Context, map[string]func(http.ResponseWriter, *http.Request)) error
 }
 
-type ApplicationServer struct {
-	srv *http.Server
-}
+type ApplicationServer struct{}
 
-func NewApplicationServer(srv *http.Server) *ApplicationServer {
-	return &ApplicationServer{
-		srv: srv,
-	}
+func NewApplicationServer() *ApplicationServer {
+	return &ApplicationServer{}
 }
 
 func (s *ApplicationServer) Run(baseCtx context.Context, configs map[string]func(http.ResponseWriter, *http.Request)) error {
@@ -30,11 +31,15 @@ func (s *ApplicationServer) Run(baseCtx context.Context, configs map[string]func
 	for pattern, handler := range configs {
 		mux.HandleFunc(pattern, handler)
 	}
-	s.srv.Handler = mux
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%v", port),
+		Handler: mux,
+	}
 
 	eg.Go(func() error {
 		log.Println("ApplicationServer: Starting application server...")
-		if err := s.srv.ListenAndServe(); err != nil {
+		if err := srv.ListenAndServe(); err != nil {
 			return fmt.Errorf("http.Server.ListenAndServe failed: %w", err)
 		}
 		log.Println("ApplicationServer: Gracefully exited application server...")
@@ -47,7 +52,7 @@ func (s *ApplicationServer) Run(baseCtx context.Context, configs map[string]func
 		defer cancel()
 
 		log.Println("Attempting to gracefully shutdown HTTP server...")
-		if err := s.srv.Shutdown(shutdownCtx); err != nil {
+		if err := srv.Shutdown(shutdownCtx); err != nil {
 			log.Printf("http.Server.Shutdown failed: %v", err)
 			return fmt.Errorf("http.Server.Shutdown failed: %w", err)
 		}

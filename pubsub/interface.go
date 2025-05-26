@@ -7,8 +7,8 @@ import (
 )
 
 type (
-	Topic        string
-	Subscription string
+	Topic          string
+	SubscriptionID string
 )
 
 type Publisher interface {
@@ -16,14 +16,15 @@ type Publisher interface {
 }
 
 type Subscriber interface {
-	Subscribe(ctx context.Context, subscription Subscription) error
+	Subscribe(context.Context, Subscription) error
 }
 
-type SubscriptionHandler interface {
-	Handle(ctx context.Context, msg *pubsub.Message) error
+type Subscription interface {
+	Receive(context.Context, func(context.Context, *pubsub.Message)) error
 }
 
 type PubSubClient interface {
 	GetClient() *pubsub.Client
+	Subscription(SubscriptionID) Subscription
 	Close() error
 }
