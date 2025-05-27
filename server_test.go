@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"cloud.google.com/go/pubsub"
 	kitpubsub "github.com/TlexCypher/PubSub/pubsub"
 	"github.com/TlexCypher/PubSub/pubsub/mock"
 	"github.com/google/go-cmp/cmp"
@@ -71,12 +72,22 @@ func TestApplicationServer(t *testing.T) {
 func TestPubSubWorker(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		description string
-		wantErr     error
+		description         string
+		wantErr             error
+		subscriptionHandler func(context.Context, *pubsub.Message)
+		subscribeErr        error
 	}{
 		{
-			description: "Success case",
-			wantErr:     nil,
+			description:         "Success case",
+			wantErr:             nil,
+			subscriptionHandler: nil,
+			subscribeErr:        nil,
+		},
+		{
+			description:         "Failed case",
+			wantErr:             mock.MockServerErr,
+			subscriptionHandler: nil,
+			subscribeErr:        mock.MockServerErr,
 		},
 	}
 	ctx := context.Background()
@@ -85,9 +96,10 @@ func TestPubSubWorker(t *testing.T) {
 		t.Run(tt.description, func(t *testing.T) {
 			t.Parallel()
 			mockedPubsubWorker := kitpubsub.NewPubSubWorker(ctx)
+			builder := mock.NewMockSubscriberBuilder().SubscriptionHandler(tt.subscriptionHandler).SubscribeError(tt.subscribeErr)
 			mockedPubsubWorker.RegisterSubscribers(
 				map[kitpubsub.Subscriber]kitpubsub.Subscription{
-					mock.NewMockSubscriber(): mock.NewMockSubscription(),
+					builder.Build(): mock.NewMockSubscription(),
 				},
 			)
 			if err := mockedPubsubWorker.Run(); !errors.Is(err, tt.wantErr) {

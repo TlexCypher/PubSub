@@ -9,9 +9,11 @@ import (
 )
 
 var (
-	MockServerID    = "MOCK_SERVER"
-	MockServerErr   = fmt.Errorf("MOCK_SERVER_ERR")
-	MockPublishFunc = (func(context.Context, kitpubsub.Topic, []byte) (string, error))(nil)
+	MockServerID            = "MOCK_SERVER"
+	MockServerErr           = fmt.Errorf("MOCK_SERVER_ERR")
+	MockSubscribeErr        = fmt.Errorf("MOCK_SUBSCRIBE_ERR")
+	MockPublishFunc         = (func(context.Context, kitpubsub.Topic, []byte) (string, error))(nil)
+	MockSubscriptionHandler = (func(context.Context, *pubsub.Message))(nil)
 )
 
 /* publisher */
@@ -62,26 +64,64 @@ func (mp *MockPublisher) Publish(ctx context.Context, topic kitpubsub.Topic, dat
 }
 
 /* subscriber */
-type MockSubscriber struct {
+type MockSubscriberBuilder struct {
+	mockSubscriber *MockSubscriber
 }
 
-func NewMockSubscriber() kitpubsub.Subscriber {
-	return &MockSubscriber{}
+func NewMockSubscriberBuilder() *MockSubscriberBuilder {
+	return &MockSubscriberBuilder{
+		mockSubscriber: &MockSubscriber{
+			subscriptionHandler: MockSubscriptionHandler,
+			subscribeErr:        nil,
+		},
+	}
+}
+
+func (msb *MockSubscriberBuilder) Build() *MockSubscriber {
+	return msb.mockSubscriber
+}
+
+func (msb *MockSubscriberBuilder) SubscriptionHandler(subscriptionHandler func(context.Context, *pubsub.Message)) *MockSubscriberBuilder {
+	msb.mockSubscriber.subscriptionHandler = subscriptionHandler
+	return msb
+}
+
+func (msb *MockSubscriberBuilder) SubscribeError(subscribeErr error) *MockSubscriberBuilder {
+	msb.mockSubscriber.subscribeErr = subscribeErr
+	return msb
+}
+
+type MockSubscriber struct {
+	subscriptionHandler func(context.Context, *pubsub.Message)
+	subscribeErr        error
 }
 
 func (ms *MockSubscriber) Subscribe(ctx context.Context, subscription kitpubsub.Subscription) error {
-	//TODO: implement this, mock content, you bet.
-	return nil
+	if ms.subscriptionHandler != nil {
+		err := subscription.Receive(ctx, ms.subscriptionHandler)
+		if err != nil {
+			return err
+		}
+	}
+	return ms.subscribeErr
 }
 
 /* subscription*/
-type MockSubscription struct{}
+type MockSubscription struct {
+	subscribeErr error
+}
 
 func NewMockSubscription() kitpubsub.Subscription {
-	return &MockSubscription{}
+	return &MockSubscription{
+		subscribeErr: nil,
+	}
 }
 
 func (ms *MockSubscription) Receive(ctx context.Context, handler func(context.Context, *pubsub.Message)) error {
-	//TODO: implement this, mock content, you bet.
-	return nil
+	if handler != nil {
+		handler(ctx, &pubsub.Message{
+			Data: []byte("MOCK MESSAGE"),
+		})
+	}
+	return ms.subscribeErr
 }
